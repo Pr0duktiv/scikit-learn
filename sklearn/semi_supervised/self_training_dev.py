@@ -1,4 +1,5 @@
 import numpy as np
+from self_training import SelfTraining
 from sklearn.utils import shuffle
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.datasets import load_iris
@@ -15,4 +16,5 @@ estimator = KNeighborsClassifier()
 
 estimator.fit(X[:30],y[:30])
 
-print(y)
+sfe = SelfTraining()
+sfe.fit(X,y)
