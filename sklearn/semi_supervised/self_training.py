@@ -33,6 +33,9 @@ class SelfTraining(BaseEstimator):
             Returns self.
         """
         X, y = check_X_y(X, y)
+
+        unlabeled_X = X[np.where(y == -1)]
+
         # Return the estimator
         return self
 
