@@ -35,6 +35,9 @@ class SelfTraining(BaseEstimator):
         X, y = check_X_y(X, y)
 
         unlabeled_X = X[np.where(y == -1)]
+        labeled_X = X[np.where(y != -1)]
+
+        maskSize = labeled_X.shape[0]
 
         # Return the estimator
         return self
