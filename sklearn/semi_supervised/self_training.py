@@ -8,7 +8,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from sklearn.utils.multiclass import unique_labels
 from sklearn.metrics import euclidean_distances
-from sklearn.utils import check_random_state
+from sklearn.utils import check_random_state, shuffle
 
 
 class SelfTraining(BaseEstimator):
@@ -50,22 +50,26 @@ class SelfTraining(BaseEstimator):
             U_small = self._get_random_subset(X,y, self.u)
             L_X = X[np.where(y != -1)]
             L_y = y[np.where(y != -1)]
+
+            if (len(L_X) == 0):
+                break
+
             self.model.fit(L_X, L_y)
             pred = self.model.predict(U_small)
             pred_pos = np.argpartition(pred, self.p)[-self.p:]
             pred_neg = np.argpartition(pred, self.n)[:self.n]
 
-            X = np.append(X, U_small[pred_pos])
-            y = np.append(y, np.ones(len(pred_pos)))
+            X = np.append(X, U_small[pred_pos], axis=0)
+            y = np.append(y, np.ones(len(pred_pos)), axis=0)
 
-            X = np.append(X, U_small[pred_neg])
-            y = np.append(y, np.zeros(len(pred_neg)))
+            X = np.append(X, U_small[pred_neg], axis=0)
+            y = np.append(y, np.zeros(len(pred_neg)), axis=0)
 
-            if shuffle_each_iter:
+            if self.shuffle_each_iter:
                 X, y = shuffle(X, y, random_state=self.random_state)
 
         # Return the estimator
-        return self
+        return self.model
 
     def predict(self, X):
         """ A reference implementation of a predicting function.
@@ -79,14 +83,15 @@ class SelfTraining(BaseEstimator):
             Returns :math:`x^2` where :math:`x` is the first column of `X`.
         """
         X = check_array(X)
-        return X[:, 0]**2
+        pred = self.model.predict(X).round()
+        return pred
 
     def _get_random_subset(self, X, y, size):
         unlabeled_indicies = np.where(y==-1)[0]
 
         random_choice = check_random_state(self.random_state).choice(unlabeled_indicies, replace=True, size=size)
 
-        return X[random_choice], y[random_choice]
+        return X[random_choice]
 
 
 
