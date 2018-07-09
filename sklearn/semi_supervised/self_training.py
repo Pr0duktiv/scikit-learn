@@ -15,8 +15,12 @@ class SelfTraining(BaseEstimator):
     demo_param : str, optional
         A parameter used for demonstation of how to pass and store paramters.
     """
-    def __init__(self, demo_param='demo_param'):
-        self.demo_param = demo_param
+    def __init__(self, model, p=1, n=3, k=30, u=75):
+        self.model = model
+        self.p = p
+        self.n = n
+        self.k = k
+        self.u = u
 
     def fit(self, X, y):
         """A reference implementation of a fitting function
@@ -34,10 +38,11 @@ class SelfTraining(BaseEstimator):
         """
         X, y = check_X_y(X, y)
 
-        unlabeled_X = X[np.where(y == -1)]
-        labeled_X = X[np.where(y != -1)]
+        U = X[np.where(y == -1)]
 
-        maskSize = labeled_X.shape[0]
+        for _ in range(k):
+            L = X[np.where(y == -1)]
+
 
         # Return the estimator
         return self
