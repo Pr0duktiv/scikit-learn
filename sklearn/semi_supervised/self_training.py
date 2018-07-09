@@ -1,3 +1,5 @@
+#TODO
+#rrandomly choose 2p + 2n examples from U to replenish U'
 """
 This is a module to be used as a reference for building other modules
 """
@@ -16,13 +18,14 @@ class SelfTraining(BaseEstimator):
     demo_param : str, optional
         A parameter used for demonstation of how to pass and store paramters.
     """
-    def __init__(self, model, p=1, n=3, k=30, u=7, random_state=None):
+    def __init__(self, model, p=1, n=3, k=30, u=7, random_state=None, shuffle_each_iter=True):
         self.model = model
         self.p = p
         self.n = n
         self.k = k
         self.u = u
         self.random_state = random_state
+        self.shuffle_each_iter = shuffle_each_iter
 
 
     def fit(self, X, y):
@@ -44,13 +47,13 @@ class SelfTraining(BaseEstimator):
         U = X[np.where(y == -1)]
 
         for _ in range(self.k):
-            U_small = self._get_random_subbset(X,y)
+            U_small = self._get_random_subset(X,y, self.u)
             L_X = X[np.where(y != -1)]
             L_y = y[np.where(y != -1)]
             self.model.fit(L_X, L_y)
             pred = self.model.predict(U_small)
             pred_pos = np.argpartition(pred, self.p)[-self.p:]
-            pred_neg = np.argpartition(pred, self.n)[:self.p]
+            pred_neg = np.argpartition(pred, self.n)[:self.n]
 
             X = np.append(X, U_small[pred_pos])
             y = np.append(y, np.ones(len(pred_pos)))
@@ -58,9 +61,8 @@ class SelfTraining(BaseEstimator):
             X = np.append(X, U_small[pred_neg])
             y = np.append(y, np.zeros(len(pred_neg)))
 
-            X, y = shuffle(X, y, random_state=42)
-
-
+            if shuffle_each_iter:
+                X, y = shuffle(X, y, random_state=self.random_state)
 
         # Return the estimator
         return self
