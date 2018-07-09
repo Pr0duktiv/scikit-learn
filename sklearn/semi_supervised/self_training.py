@@ -1,6 +1,8 @@
 #TODO
 #rrandomly choose 2p + 2n examples from U to replenish U'
 # verify binary (throw error)
+# probabilities for p selection
+
 """
 This is a module to be used as a reference for building other modules
 """
