@@ -37,7 +37,12 @@ def get_metrics_filter(estimator):
 
 estimator = KNeighborsClassifier()
 
-get_metrics(estimator)
+#get_metrics(estimator)
 
+st = SelfTraining(estimator)
+X, y = load_iris(return_X_y=True)
+y[:30] = -1
+
+print(st._get_random_subset(X,y, 10))
 
 
