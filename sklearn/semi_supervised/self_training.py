@@ -6,6 +6,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from sklearn.utils.multiclass import unique_labels
 from sklearn.metrics import euclidean_distances
+from sklearn.utils import check_random_state
 
 
 class SelfTraining(BaseEstimator):
@@ -15,12 +16,14 @@ class SelfTraining(BaseEstimator):
     demo_param : str, optional
         A parameter used for demonstation of how to pass and store paramters.
     """
-    def __init__(self, model, p=1, n=3, k=30, u=75):
+    def __init__(self, model, p=1, n=3, k=30, u=7, random_state=None):
         self.model = model
         self.p = p
         self.n = n
         self.k = k
         self.u = u
+        self.random_state = random_state
+
 
     def fit(self, X, y):
         """A reference implementation of a fitting function
@@ -60,3 +63,13 @@ class SelfTraining(BaseEstimator):
         """
         X = check_array(X)
         return X[:, 0]**2
+
+    def _get_random_subset(self, X, y, size):
+        unlabeled_indicies = np.where(y==-1)[0]
+
+        random_choice = check_random_state(self.random_state).choice(unlabeled_indicies, replace=True, size=size)
+
+        return X[random_choice], y[random_choice]
+
+
+
