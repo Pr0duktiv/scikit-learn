@@ -1,5 +1,6 @@
 #TODO
 #rrandomly choose 2p + 2n examples from U to replenish U'
+# verify binary (throw error)
 """
 This is a module to be used as a reference for building other modules
 """
@@ -18,15 +19,13 @@ class SelfTraining(BaseEstimator):
     demo_param : str, optional
         A parameter used for demonstation of how to pass and store paramters.
     """
-    def __init__(self, model, p=1, n=3, k=30, u=7, random_state=None, shuffle_each_iter=True):
+    def __init__(self, model, ratio_positive=None, k=30, u=7, random_state=None, shuffle_each_iter=True):
         self.model = model
-        self.p = p
-        self.n = n
         self.k = k
         self.u = u
         self.random_state = random_state
         self.shuffle_each_iter = shuffle_each_iter
-
+        self.ratio_positive = ratio_positive
 
     def fit(self, X, y):
         """A reference implementation of a fitting function
@@ -44,6 +43,12 @@ class SelfTraining(BaseEstimator):
         """
         X, y = check_X_y(X, y)
 
+        if self.ratio_positive == None:
+            self.ratio_positive = self._detect_ratio_positive(y)
+
+        p = int(round(ratio_positive * len(y)))
+        n = len(y) - p
+
         U = X[np.where(y == -1)]
 
         for _ in range(self.k):
@@ -56,8 +61,8 @@ class SelfTraining(BaseEstimator):
 
             self.model.fit(L_X, L_y)
             pred = self.model.predict(U_small)
-            pred_pos = np.argpartition(pred, self.p)[-self.p:]
-            pred_neg = np.argpartition(pred, self.n)[:self.n]
+            pred_pos = np.argpartition(pred, p)[-p:]
+            pred_neg = np.argpartition(pred, n)[:n]
 
             X = np.append(X, U_small[pred_pos], axis=0)
             y = np.append(y, np.ones(len(pred_pos)), axis=0)
@@ -92,6 +97,9 @@ class SelfTraining(BaseEstimator):
         random_choice = check_random_state(self.random_state).choice(unlabeled_indicies, replace=True, size=size)
 
         return X[random_choice]
+
+    def _detect_ratio_positive(self, y):
+        return np.count_nonzero(y)/len(y)
 
 
 
