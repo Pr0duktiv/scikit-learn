@@ -8,7 +8,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 
-lim = 250
+lim = 40
 
 X, y = load_breast_cancer(return_X_y=True)
 X, y_testreal = load_breast_cancer(return_X_y=True)

@@ -46,8 +46,8 @@ class SelfTraining(BaseEstimator):
         if self.ratio_positive == None:
             self.ratio_positive = self._detect_ratio_positive(y)
 
-        p = int(round(ratio_positive * len(y)))
-        n = len(y) - p
+        p = int(round(self.ratio_positive * 3))
+        n = 3-p
 
         U = X[np.where(y == -1)]
 
