@@ -43,8 +43,23 @@ class SelfTraining(BaseEstimator):
 
         U = X[np.where(y == -1)]
 
-        for _ in range(k):
-            L = X[np.where(y == -1)]
+        for _ in range(self.k):
+            U_small = self._get_random_subbset(X,y)
+            L_X = X[np.where(y != -1)]
+            L_y = y[np.where(y != -1)]
+            self.model.fit(L_X, L_y)
+            pred = self.model.predict(U_small)
+            pred_pos = np.argpartition(pred, self.p)[-self.p:]
+            pred_neg = np.argpartition(pred, self.n)[:self.p]
+
+            X = np.append(X, U_small[pred_pos])
+            y = np.append(y, np.ones(len(pred_pos)))
+
+            X = np.append(X, U_small[pred_neg])
+            y = np.append(y, np.zeros(len(pred_neg)))
+
+            X, y = shuffle(X, y, random_state=42)
+
 
 
         # Return the estimator
