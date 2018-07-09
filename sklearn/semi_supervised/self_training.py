@@ -2,6 +2,7 @@
 #rrandomly choose 2p + 2n examples from U to replenish U'
 # verify binary (throw error)
 # probabilities for p selection
+# don't sort
 
 """
 This is a module to be used as a reference for building other modules
@@ -51,6 +52,7 @@ class SelfTraining(BaseEstimator):
 
         p = int(round(self.ratio_positive * inserted))
         n = inserted-p
+        print(self.ratio_positive)
         print(p, n)
 
         for _ in range(self.k):
@@ -106,6 +108,3 @@ class SelfTraining(BaseEstimator):
 
     def _detect_ratio_positive(self, y):
         return np.count_nonzero(y)/len(y)
-
-
-
