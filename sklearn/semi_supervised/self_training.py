@@ -52,8 +52,8 @@ class SelfTraining(BaseEstimator):
 
         p = int(round(self.ratio_positive * inserted))
         n = inserted-p
-        print(self.ratio_positive)
-        print(p, n)
+        #print(self.ratio_positive)
+        #print(p, n)
 
         for _ in range(self.k):
             U_small = self._get_random_unlabeled_subset(X,y, self.u)
