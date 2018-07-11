@@ -5,7 +5,7 @@ from self_training import SelfTraining
 from sklearn.utils import shuffle
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.datasets import load_iris, load_breast_cancer
-from sklearn.model_selection import cross_val_score, train_test_split
+from sklearn.model_selection import cross_val_score, train_test_split, GridSearchCV
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 
@@ -14,6 +14,8 @@ final_est = []
 
 st_score_set = []
 final_st = []
+
+parameters = {'u':[8,10,12,14,16,18,20], 'k':[4,6,8,10,12,14,16]}
 
 X, y = load_breast_cancer(return_X_y=True)
 
@@ -35,7 +37,8 @@ for t in tqdm(range(42,52)):
         est_score.append(f1_score(pred, y_test))
         #print('Supervised Accucary: %f' % accuracy_score(pred, y_testreal[lim:]))
 
-        st = SelfTraining(est, u=15, k=10)
+        st = SelfTraining(est, u=12, k=15)
+        #st = GridSearchCV(st, parameters, 'accuracy')
         st.fit(X_train, y_train_st)
         pred = st.predict(X_test).round()
         st_score.append(f1_score(pred, y_test))
