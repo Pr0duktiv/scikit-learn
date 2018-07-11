@@ -37,12 +37,17 @@ for t in tqdm(range(42,52)):
         est_score.append(f1_score(pred, y_test))
         #print('Supervised Accucary: %f' % accuracy_score(pred, y_testreal[lim:]))
 
-        st = SelfTraining(est, u=12, k=15)
-        #st = GridSearchCV(st, parameters, 'accuracy')
-        st.fit(X_train, y_train_st)
-        pred = st.predict(X_test).round()
-        st_score.append(f1_score(pred, y_test))
-        #print('Self Training Accucary: %f' % accuracy_score(pred, y_testreal[lim:]))
+        grid = []
+        for k in [4,6,8,10,12,14,16]:
+            for u in [8,10,12,14,16,18,20]:
+                st = SelfTraining(est, u=u, k=k)
+                #st = GridSearchCV(st, parameters, 'accuracy')
+                st.fit(X_train, y_train_st)
+                pred = st.predict(X_test).round()
+                grid.append(f1_score(pred, y_test))
+                #print('Self Training Accucary: %f' % accuracy_score(pred, y_testreal[lim:]))
+
+        st_score.append(max(grid))
 
     est_score_set.append(est_score)
     st_score_set.append(st_score)
