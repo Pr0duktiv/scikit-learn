@@ -12,11 +12,12 @@ est_score = []
 st_score = []
 
 
-for i in range(10,80,1):
+for i in range(10,60,1):
     print(i)
     lim = i
     X, y = load_breast_cancer(return_X_y=True)
     X, y_testreal = load_breast_cancer(return_X_y=True)
+    X, y, y_testreal = shuffle(X,y, y_testreal, random_state=100)
     y[lim:] = -1
 
     est = KNeighborsClassifier()
@@ -24,7 +25,7 @@ for i in range(10,80,1):
 
     est_score_local = []
     st_score_local = []
-    for j in range(1,20):
+    for j in range(1,5):
         #X, y, y_testreal = shuffle(X,y, y_testreal, random_state=j)
         skfolds = StratifiedKFold(n_splits=4, random_state=j)
         for train_index, test_index in skfolds.split(X,y):
