@@ -46,14 +46,13 @@ class SelfTraining(BaseEstimator):
         """
         inserted = 5
         X, y = check_X_y(X, y)
+        self.check_not_all_unlabeled(y)
 
         if self.ratio_positive == None:
             self.ratio_positive = self._detect_ratio_positive(y)
 
         p = int(round(self.ratio_positive * inserted))
         n = inserted-p
-        print(self.ratio_positive)
-        print(p, n)
 
         for _ in range(self.k):
             U_small = self._get_random_unlabeled_subset(X,y, self.u)
@@ -65,13 +64,8 @@ class SelfTraining(BaseEstimator):
             pred = self.model.predict_proba(U_small)
             pred = self.model.predict(U_small)
 
-            #print(pred[pred_pos])
-            #print(pred[pred_neg])
             pred_pos = np.argsort(pred[np.where(pred[0] > 0.5)])[-p:]
             pred_neg = np.argsort(pred[np.where(pred[1] > 0.5)])[-n:]
-
-            #pred_pos = np.argpartition(pred_pos, p)[-p:]
-            #pred_neg = np.argpartition(pred_neg, n)[-n:]
 
             X = np.append(X, U_small[pred_pos], axis=0)
             y = np.append(y, np.ones(len(pred_pos), dtype=int), axis=0)
@@ -108,3 +102,7 @@ class SelfTraining(BaseEstimator):
 
     def _detect_ratio_positive(self, y):
         return np.count_nonzero(y)/len(y)
+
+    def check_not_all_unlabeled(self, y):
+        print(np.count_nonzero(y+1))
+
