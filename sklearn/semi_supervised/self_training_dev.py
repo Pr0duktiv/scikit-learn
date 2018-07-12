@@ -6,6 +6,7 @@ from sklearn.utils import shuffle
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.datasets import load_iris, load_breast_cancer
 from sklearn.model_selection import cross_val_score, train_test_split, GridSearchCV
+from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 
@@ -54,7 +55,8 @@ for t in tqdm(range(42,62)):
         #print(best_p)
         #st_score.append(grid)
 
-        st = SelfTraining(est, u=10, k=20)
+        est2 = KNeighborsClassifier()
+        st = SelfTraining(est2, u=10, k=20)
         #st = GridSearchCV(st, parameters, 'accuracy')
         st.fit(X_train, y_train_st)
         pred = st.predict(X_test).round()

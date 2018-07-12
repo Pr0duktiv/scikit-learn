@@ -22,10 +22,11 @@ class SelfTraining(BaseEstimator):
     demo_param : str, optional
         A parameter used for demonstation of how to pass and store paramters.
     """
-    def __init__(self, model, ratio_positive=None, k=10, u=7, random_state=None, shuffle_each_iter=True):
+    def __init__(self, model, ratio_positive=None, n_iter=10, n_iter_size=20, n_iter_insert=5, random_state=None, shuffle_each_iter=True):
         self.model = model
-        self.k = k
-        self.u = u
+        self.n_iter = n_iter
+        self.n_iter_size = n_iter_size
+        self.n_iter_insert = n_iter_insert
         self.random_state = random_state
         self.shuffle_each_iter = shuffle_each_iter
         self.ratio_positive = ratio_positive
@@ -44,40 +45,32 @@ class SelfTraining(BaseEstimator):
         self : object
             Returns self.
         """
-        inserted = 5
         X, y = check_X_y(X, y)
 
         if self.ratio_positive == None:
             self.ratio_positive = self._detect_ratio_positive(y)
 
-        p = int(round(self.ratio_positive * inserted))
-        n = inserted-p
-        #print(self.ratio_positive)
-        #print(p, n)
+        n_positives = int(round(self.ratio_positive * self.n_iter_insert))
+        n_negatives = self.n_iter_insert - n_positives
 
         for _ in range(self.k):
-            U_small = self._get_random_unlabeled_subset(X,y, self.u)
-            L_X = X[np.where(y != -1)]
-            L_y = y[np.where(y != -1)]
+            insertion_candidates = self._get_random_unlabeled_subset(X,y, self.n_iter_size)
+            labeled_X = X[np.where(y != -1)]
+            labeled_y = y[np.where(y != -1)]
 
-            self.model.fit(L_X, L_y)
-            pred = np.transpose(self.model.predict_proba(U_small))
-            pred = self.model.predict_proba(U_small)
-            pred = self.model.predict(U_small)
+            self.model.fit(labeled_X, labeled_y)
+            pred = np.transpose(self.model.predict_proba(insertion_candidates))
+            pred = self.model.predict_proba(insertion_candidates)
+            pred = self.model.predict(insertion_candidates)
 
-            #print(pred[pred_pos])
-            #print(pred[pred_neg])
-            pred_pos = np.argsort(pred[np.where(pred[0] > 0.5)])[-p:]
-            pred_neg = np.argsort(pred[np.where(pred[1] > 0.5)])[-n:]
 
-            #pred_pos = np.argpartition(pred_pos, p)[-p:]
-            #pred_neg = np.argpartition(pred_neg, n)[-n:]
+            # add best positive predictions to the dataset 
+            X = np.append(X, insertion_candidates[pred_pos], axis=0)
+            y = np.append(y, np.ones(len(best_positives), dtype=int), axis=0)
 
-            X = np.append(X, U_small[pred_pos], axis=0)
-            y = np.append(y, np.ones(len(pred_pos), dtype=int), axis=0)
-
-            X = np.append(X, U_small[pred_neg], axis=0)
-            y = np.append(y, np.zeros(len(pred_neg), dtype=int), axis=0)
+            # add best negatives predictions to the dataset 
+            X = np.append(X, insertion_candidates[pred_neg], axis=0)
+            y = np.append(y, np.zeros(len(best_negatives), dtype=int), axis=0)
 
             if self.shuffle_each_iter:
                 X, y = shuffle(X, y, random_state=self.random_state)
