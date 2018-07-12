@@ -53,24 +53,26 @@ class SelfTraining(BaseEstimator):
         n_positives = int(round(self.ratio_positive * self.n_iter_insert))
         n_negatives = self.n_iter_insert - n_positives
 
-        for _ in range(self.k):
+        for _ in range(self.n_iter):
             insertion_candidates = self._get_random_unlabeled_subset(X,y, self.n_iter_size)
             labeled_X = X[np.where(y != -1)]
             labeled_y = y[np.where(y != -1)]
 
             self.model.fit(labeled_X, labeled_y)
             pred = np.transpose(self.model.predict_proba(insertion_candidates))
-            pred = self.model.predict_proba(insertion_candidates)
-            pred = self.model.predict(insertion_candidates)
 
+            pred = self.model.predict_proba(insertion_candidates)
+
+            best_positives = np.argsort(pred[np.where(pred[0] > 0.6)])[-n_positives:]
+            best_negatives = np.argsort(pred[np.where(pred[1] > 0.6)])[-n_negatives:]
 
             # add best positive predictions to the dataset 
-            X = np.append(X, insertion_candidates[pred_pos], axis=0)
-            y = np.append(y, np.ones(len(best_positives), dtype=int), axis=0)
+            X = np.append(X, insertion_candidates[best_positives], axis=0)
+            y = np.append(y, np.ones(len(n_positives), dtype=int), axis=0)
 
             # add best negatives predictions to the dataset 
-            X = np.append(X, insertion_candidates[pred_neg], axis=0)
-            y = np.append(y, np.zeros(len(best_negatives), dtype=int), axis=0)
+            X = np.append(X, insertion_candidates[best_negatives], axis=0)
+            y = np.append(y, np.zeros(len(n_negatives), dtype=int), axis=0)
 
             if self.shuffle_each_iter:
                 X, y = shuffle(X, y, random_state=self.random_state)
