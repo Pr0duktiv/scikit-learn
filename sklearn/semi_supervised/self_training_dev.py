@@ -1,13 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from tqdm import tqdm
-from self_training import SelfTraining
+#from tqdm import tqdm
+from self_training_v2 import SelfTraining
 from sklearn.utils import shuffle
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.datasets import load_iris, load_breast_cancer
 from sklearn.model_selection import cross_val_score, train_test_split, GridSearchCV
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import StratifiedKFold
+from tqdm import tqdm
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 
 est_score_set = []
@@ -15,8 +17,6 @@ final_est = []
 
 st_score_set = []
 final_st = []
-
-parameters = {'u':[8,10,12,14,16,18,20], 'k':[4,6,8,10,12,14,16]}
 
 X, y = load_breast_cancer(return_X_y=True)
 
@@ -32,32 +32,14 @@ for t in tqdm(range(42,62)):
         y_train_st = y_train.copy()
         y_train_st[lim:] = -1
 
-        est = KNeighborsClassifier()
-        est.fit(X_train[:lim],y_train[:lim])
+
+        est = LogisticRegression()
+        est.fit(X_train[:lim], y_train[:lim])
         pred = est.predict(X_test).round()
         est_score.append(f1_score(pred, y_test))
-        #print('Supervised Accucary: %f' % accuracy_score(pred, y_testreal[lim:]))
 
-        #grid = -1
-        #best_p = (-1,-1)
-
-        #for k in [4,6,8,10,12,14,16]:
-        #    for u in [8,10,12,14,16,18,20]:
-        #        st = SelfTraining(est, u=u, k=k)
-        #        #st = GridSearchCV(st, parameters, 'accuracy')
-        #        st.fit(X_train, y_train_st)
-        #        pred = st.predict(X_test).round()
-        #        score = f1_score(pred, y_test)
-        #        if (score > grid):
-        #            best_p = (u,k)
-        #            grid = score
-        #        #print('Self Training Accucary: %f' % accuracy_score(pred, y_testreal[lim:]))
-        #print(best_p)
-        #st_score.append(grid)
-
-        est2 = KNeighborsClassifier()
-        st = SelfTraining(est2, u=10, k=20)
-        #st = GridSearchCV(st, parameters, 'accuracy')
+        est2 = LogisticRegression()
+        st = SelfTraining(est2)
         st.fit(X_train, y_train_st)
         pred = st.predict(X_test).round()
         st_score.append(f1_score(pred, y_test))
