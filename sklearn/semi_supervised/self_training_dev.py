@@ -20,26 +20,27 @@ final_st = []
 
 #X, y = load_breast_cancer(return_X_y=True)
 X, y = load_iris(return_X_y=True)
+X, y = shuffle(X,y, random_state=42)
 
 for t in tqdm(range(52,62)):
     est_score = []
     st_score = []
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=t)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=t)
 
-    for i in range(10,80):
+    for i in range(5,80):
         lim = i
 
         y_train_st = y_train.copy()
         y_train_st[lim:] = -1
 
 
-        est = LogisticRegression()
+        est = GaussianNB()
         est.fit(X_train[:lim], y_train[:lim])
         pred = est.predict(X_test).round()
         est_score.append(accuracy_score(pred, y_test))
 
-        est2 = LogisticRegression()
+        est2 = GaussianNB()
         st = SelfTraining(est2)
         st.fit(X_train, y_train_st)
         pred = st.predict(X_test).round()

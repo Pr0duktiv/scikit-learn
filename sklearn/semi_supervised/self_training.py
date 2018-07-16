@@ -8,7 +8,7 @@ def _check_estimator(estimator):
         raise ValueError("The base estimator should implement predict_proba!")
 
 class SelfTraining(BaseEstimator):
-    def __init__(self, estimator, threshold=0.9, max_iter=100):
+    def __init__(self, estimator, threshold=0.8, max_iter=500):
         self.estimator = estimator
         self.threshold = threshold
         self.max_iter = max_iter
