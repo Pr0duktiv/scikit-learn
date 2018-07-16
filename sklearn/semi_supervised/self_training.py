@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
+from sklearn.utils import safe_mask
 
 def _check_estimator(estimator):
     """Make sure that an estimator implements the necessary methods."""
@@ -8,7 +9,7 @@ def _check_estimator(estimator):
         raise ValueError("The base estimator should implement predict_proba!")
 
 class SelfTraining(BaseEstimator):
-    def __init__(self, estimator, threshold=0.9, max_iter=100):
+    def __init__(self, estimator, threshold=0.7, max_iter=500):
         self.estimator = estimator
         self.threshold = threshold
         self.max_iter = max_iter

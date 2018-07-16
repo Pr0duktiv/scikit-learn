@@ -12,54 +12,57 @@ from sklearn.model_selection import StratifiedKFold
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 
-est_score_set = []
-final_est = []
-
-st_score_set = []
-final_st = []
-
-#X, y = load_breast_cancer(return_X_y=True)
 X, y = load_iris(return_X_y=True)
+X, y_testreal = load_iris(return_X_y=True)
+X, y, y_testreal = shuffle(X,y, y_testreal, random_state=100)
 
-for t in tqdm(range(52,62)):
-    est_score = []
-    st_score = []
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=t)
-
-    for i in range(10,80):
-        lim = i
-
-        y_train_st = y_train.copy()
-        y_train_st[lim:] = -1
+est_score = []
+st_score = []
 
 
-        est = LogisticRegression()
-        est.fit(X_train[:lim], y_train[:lim])
-        pred = est.predict(X_test).round()
-        est_score.append(accuracy_score(pred, y_test))
+for i in tqdm(range(10,80)):
+    X, y = load_iris(return_X_y=True)
+    X, y_testreal = load_iris(return_X_y=True)
+    X, y, y_testreal = shuffle(X,y, y_testreal, random_state=100)
 
-        est2 = LogisticRegression()
-        st = SelfTraining(est2)
-        st.fit(X_train, y_train_st)
-        pred = st.predict(X_test).round()
-        st_score.append(accuracy_score(pred, y_test))
+    lim = i
+    y[lim:] = -1
 
-    est_score_set.append(est_score)
-    st_score_set.append(st_score)
+    est = GaussianNB()
+    st = SelfTraining(est)
 
-est_score_set = np.array(est_score_set).T.tolist()
-for l in est_score_set:
-    final_est.append(np.mean(l))
+    est_score_local = []
+    st_score_local = []
 
-st_score_set = np.array(st_score_set).T.tolist()
-for l in st_score_set:
-    final_st.append(np.mean(l))
+    for j in range(1,10):
+        skfolds = StratifiedKFold(n_splits=3, random_state=42+j)
+        for train_index, test_index in skfolds.split(X,y):
+            X_train = X[train_index]
+            y_train = y[train_index]
+            X_test = X[test_index]
+            y_test = y[test_index]
+            y_test_true = y_testreal[test_index]
+
+            X_train_filtered = X_train[np.where(y_train != -1)]
+            y_train_filtered = y_train[np.where(y_train != -1)]
+
+            # get score for supervised
+            est.fit(X_train_filtered, y_train_filtered)
+            y_pred = est.predict(X_test)
+            est_score_local.append(accuracy_score(y_pred, y_test_true))
+
+            # get score for semi-supervised
+            st.fit(X_train, y_train)
+            y_pred = st.predict(X_test)
+            st_score_local.append(accuracy_score(y_pred, y_test_true))
+
+    est_score.append(np.array(est_score_local).mean())
+    st_score.append(np.array(st_score_local).mean())
 
 
 plt.figure(1)
-plt.plot(final_est, label='Supervised')
-plt.plot(final_st, label='Semisupervised')
+plt.plot(est_score, label='Supervised')
+plt.plot(st_score, label='Semi-supervised')
 plt.legend()
 plt.show()
 
