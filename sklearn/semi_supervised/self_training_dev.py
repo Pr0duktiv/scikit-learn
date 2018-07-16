@@ -18,9 +18,10 @@ final_est = []
 st_score_set = []
 final_st = []
 
-X, y = load_breast_cancer(return_X_y=True)
+#X, y = load_breast_cancer(return_X_y=True)
+X, y = load_iris(return_X_y=True)
 
-for t in tqdm(range(42,62)):
+for t in tqdm(range(52,62)):
     est_score = []
     st_score = []
 
@@ -36,13 +37,13 @@ for t in tqdm(range(42,62)):
         est = LogisticRegression()
         est.fit(X_train[:lim], y_train[:lim])
         pred = est.predict(X_test).round()
-        est_score.append(f1_score(pred, y_test))
+        est_score.append(accuracy_score(pred, y_test))
 
         est2 = LogisticRegression()
         st = SelfTraining(est2)
         st.fit(X_train, y_train_st)
         pred = st.predict(X_test).round()
-        st_score.append(f1_score(pred, y_test))
+        st_score.append(accuracy_score(pred, y_test))
 
     est_score_set.append(est_score)
     st_score_set.append(st_score)
