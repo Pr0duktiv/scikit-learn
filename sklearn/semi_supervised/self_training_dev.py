@@ -5,11 +5,13 @@ from self_training import SelfTraining
 from sklearn.utils import shuffle
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.semi_supervised.label_propagation import LabelPropagation, LabelSpreading
 from sklearn.datasets import load_iris, load_breast_cancer
 from sklearn.model_selection import cross_val_score, train_test_split, GridSearchCV
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import StratifiedKFold
 from tqdm import tqdm
+from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 
 X, y = load_iris(return_X_y=True)
@@ -18,51 +20,56 @@ X, y, y_testreal = shuffle(X,y, y_testreal, random_state=100)
 
 est_score = []
 st_score = []
+def make_meshgrid(x, y, h=.02):
+    x_min, x_max = x.min() - 1, x.max() + 1
+    y_min, y_max = y.min() - 1, y.max() + 1
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
+                         np.arange(y_min, y_max, h))
+    return xx, yy
 
 
-for i in tqdm(range(10,80)):
-    X, y = load_iris(return_X_y=True)
-    X, y_testreal = load_iris(return_X_y=True)
-    X, y, y_testreal = shuffle(X,y, y_testreal, random_state=100)
+def plot_contours(ax, clf, xx, yy, **params):
+    Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
+    Z = Z.reshape(xx.shape)
+    out = ax.contourf(xx, yy, Z, **params)
+    return out
 
-    lim = i
-    y[lim:] = -1
+X =X[:, 2:4]
+lim = 25
+y[lim:] = -1
 
-    est = GaussianNB()
-    st = SelfTraining(est)
+C = 100
+st = SelfTraining(SVC(kernel='rbf', gamma=0.7, C=C, probability=True), max_iter=1000, threshold=0.7 )
+clf = SVC(kernel='rbf', gamma=0.7, C=C)
+lbl = LabelSpreading()
 
-    est_score_local = []
-    st_score_local = []
+st.fit(X,y)
+clf.fit(X[:lim], y[:lim])
+lbl.fit(X, y)
 
-    for j in range(1,10):
-        skfolds = StratifiedKFold(n_splits=3, random_state=42+j)
-        for train_index, test_index in skfolds.split(X,y):
-            X_train = X[train_index]
-            y_train = y[train_index]
-            X_test = X[test_index]
-            y_test = y[test_index]
-            y_test_true = y_testreal[test_index]
+models = (st, clf, lbl)
 
-            X_train_filtered = X_train[np.where(y_train != -1)]
-            y_train_filtered = y_train[np.where(y_train != -1)]
+titles = ('SVC self training',
+          'SVC normal',
+          'Labelprop')
 
-            # get score for supervised
-            est.fit(X_train_filtered, y_train_filtered)
-            y_pred = est.predict(X_test)
-            est_score_local.append(accuracy_score(y_pred, y_test_true))
+fig, sub = plt.subplots(3, 1)
+plt.subplots_adjust(wspace=0.4, hspace=0.4)
 
-            # get score for semi-supervised
-            st.fit(X_train, y_train)
-            y_pred = st.predict(X_test)
-            st_score_local.append(accuracy_score(y_pred, y_test_true))
+X0, X1 = X[:, 0], X[:, 1]
+xx, yy = make_meshgrid(X0, X1)
 
-    est_score.append(np.array(est_score_local).mean())
-    st_score.append(np.array(st_score_local).mean())
+for clf, title, ax in zip(models, titles, sub.flatten()):
+    plot_contours(ax, clf, xx, yy,
+                  cmap=plt.cm.coolwarm, alpha=0.8)
+    ax.scatter(X0, X1, c=y_testreal, cmap=plt.cm.coolwarm, s=20, edgecolors='k')
+    ax.scatter(X0[:lim], X1[:lim], c=y[:lim], s=20, marker='X', cmap=plt.cm.coolwarm)
+    ax.set_xlim(xx.min(), xx.max())
+    ax.set_ylim(yy.min(), yy.max())
+    ax.set_xlabel('Petal length')
+    ax.set_ylabel('Petal width')
+    ax.set_xticks(())
+    ax.set_yticks(())
+    ax.set_title(title)
 
-
-plt.figure(1)
-plt.plot(est_score, label='Supervised')
-plt.plot(st_score, label='Semi-supervised')
-plt.legend()
 plt.show()
-
