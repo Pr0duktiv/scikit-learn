@@ -39,8 +39,10 @@ lim = 25
 y[lim:] = -1
 
 C = 100
-st = SelfTraining(SVC(kernel='rbf', gamma=0.7, C=C, probability=True), max_iter=1000, threshold=0.7 )
-clf = SVC(kernel='rbf', gamma=0.7, C=C)
+st = SelfTraining(GaussianNB(), max_iter=1000, threshold=0.7)
+#st = SelfTraining(SVC(kernel='rbf', gamma=0.7, C=C, probability=True), max_iter=1000, threshold=0.7 )
+#clf = SVC(kernel='rbf', gamma=0.7, C=C)
+clf = GaussianNB()
 lbl = LabelSpreading()
 
 st.fit(X,y)
